@@ -451,13 +451,6 @@ const Home = () => {
           </>
         )}
       </div>
-      
-      {/* Footer */}
-      <footer className="bg-gray-800 text-white py-4 mt-auto">
-        <div className="container mx-auto px-4 text-center">
-          <p>Economics 135: Monetary and Financial Economics - Interactive Learning Tools</p>
-        </div>
-      </footer>
     </div>
   );
 };
