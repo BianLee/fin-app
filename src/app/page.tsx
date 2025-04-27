@@ -23,13 +23,16 @@ const Home = () => {
 
     // ----- DATA DEFINITIONS -----
     // Initial bond data
-    const initialBondData = [
-        { price: 950, quantity: 100, interest: 5.3 },
-        { price: 900, quantity: 200, interest: 11.1 },
-        { price: 850, quantity: 300, interest: 17.6 },
-        { price: 800, quantity: 400, interest: 25.0 },
-        { price: 750, quantity: 500, interest: 33.0 },
-    ];
+    const initialBondData = useMemo(
+        () => [
+            { price: 950, quantity: 100, interest: 5.3 },
+            { price: 900, quantity: 200, interest: 11.1 },
+            { price: 850, quantity: 300, interest: 17.6 },
+            { price: 800, quantity: 400, interest: 25.0 },
+            { price: 750, quantity: 500, interest: 33.0 },
+        ],
+        []
+    );
 
     // Data for money supply and interest rates
     const moneyData = [
@@ -114,7 +117,7 @@ const Home = () => {
         });
 
         setBondData(newBondData);
-    }, [expectedInflation, wealthLevel, riskLevel]);
+    }, [expectedInflation, wealthLevel, riskLevel, initialBondData]);
 
     const bondResult = calculateBondShift();
 
@@ -682,6 +685,181 @@ const Home = () => {
         </div>
     );
 
+    // Get current lesson based on active tab
+    const getCurrentLesson = () => {
+        if (mainCategory === "finance") {
+            switch (financeTab) {
+                case "bonds":
+                    return "Bond Markets and Interest Rates";
+                case "money":
+                    return "Money Supply and Interest Rates";
+                case "system":
+                    return "Financial System Overview";
+                case "fisher":
+                    return "Fisher Effect and Inflation";
+                default:
+                    return "Financial Concepts";
+            }
+        } else {
+            switch (gameTab) {
+                case "beer":
+                    return "Supply Chain Management (Beer Distribution Game)";
+                case "tariff-sim":
+                    return "Tariffs and Trade (Tariff Simulator)";
+                case "tariff-game":
+                    return "Tariffs and Trade (Tariff Game)";
+                default:
+                    return "Financial Games";
+            }
+        }
+    };
+
+    // Get page context based on active tab
+    const getPageContext = () => {
+        if (mainCategory === "finance") {
+            switch (financeTab) {
+                case "bonds":
+                    return {
+                        title: "Bond Market Model",
+                        description:
+                            "Explore how bond prices and interest rates are determined in the market.",
+                        keyConcepts: [
+                            "Bond Pricing",
+                            "Interest Rates",
+                            "Market Equilibrium",
+                            "Yield Curve",
+                        ],
+                        learningObjectives: [
+                            "Understand the inverse relationship between bond prices and interest rates",
+                            "Learn how market forces determine bond prices",
+                            "Analyze the impact of economic factors on bond markets",
+                        ],
+                    };
+                case "money":
+                    return {
+                        title: "Money & Interest Rates",
+                        description:
+                            "Investigate the relationship between money supply and interest rates.",
+                        keyConcepts: [
+                            "Money Supply",
+                            "Interest Rates",
+                            "Liquidity Preference",
+                            "Monetary Policy",
+                        ],
+                        learningObjectives: [
+                            "Understand the liquidity preference framework",
+                            "Analyze the effects of money supply changes",
+                            "Explore the relationship between money growth and interest rates",
+                        ],
+                    };
+                case "fisher":
+                    return {
+                        title: "Fisher Effect",
+                        description:
+                            "Learn about the relationship between inflation and interest rates.",
+                        keyConcepts: [
+                            "Inflation",
+                            "Nominal Interest Rates",
+                            "Real Interest Rates",
+                            "Expected Inflation",
+                        ],
+                        learningObjectives: [
+                            "Understand the Fisher equation",
+                            "Analyze the impact of inflation on interest rates",
+                            "Explore the relationship between expected inflation and nominal rates",
+                        ],
+                    };
+                default:
+                    return {
+                        title: "Financial Concepts",
+                        description:
+                            "Explore various financial concepts and their interrelationships.",
+                        keyConcepts: [
+                            "Financial Markets",
+                            "Economic Principles",
+                            "Market Dynamics",
+                        ],
+                        learningObjectives: [
+                            "Understand fundamental financial concepts",
+                            "Analyze market behaviors",
+                            "Apply financial principles to real-world scenarios",
+                        ],
+                    };
+            }
+        } else {
+            switch (gameTab) {
+                case "beer":
+                    return {
+                        title: "Beer Distribution Game",
+                        description:
+                            "Experience the bullwhip effect in supply chains through this interactive simulation.",
+                        keyConcepts: [
+                            "Supply Chain",
+                            "Bullwhip Effect",
+                            "Inventory Management",
+                            "System Dynamics",
+                        ],
+                        learningObjectives: [
+                            "Understand the causes of the bullwhip effect",
+                            "Experience decision-making under uncertainty",
+                            "Learn the impact of delays on system stability",
+                            "Practice inventory management strategies",
+                        ],
+                    };
+                case "tariff-sim":
+                    return {
+                        title: "Tariff Simulator",
+                        description:
+                            "Explore how different tariff policies affect international trade outcomes.",
+                        keyConcepts: [
+                            "Tariffs",
+                            "International Trade",
+                            "Trade Policy",
+                            "Economic Impact",
+                        ],
+                        learningObjectives: [
+                            "Understand the effects of tariffs on trade",
+                            "Analyze the impact on domestic and foreign markets",
+                            "Explore the relationship between tariffs and prices",
+                        ],
+                    };
+                case "tariff-game":
+                    return {
+                        title: "Tariff Game",
+                        description:
+                            "Play as a trade policy maker and see the consequences of your decisions.",
+                        keyConcepts: [
+                            "Trade Policy",
+                            "Economic Strategy",
+                            "International Relations",
+                            "Policy Impact",
+                        ],
+                        learningObjectives: [
+                            "Understand the complexities of trade policy",
+                            "Experience the trade-offs in policy decisions",
+                            "Analyze the impact of tariffs on different stakeholders",
+                        ],
+                    };
+                default:
+                    return {
+                        title: "Financial Games",
+                        description:
+                            "Interactive simulations to learn about financial concepts.",
+                        keyConcepts: [
+                            "Interactive Learning",
+                            "Financial Simulation",
+                            "Economic Principles",
+                        ],
+                        learningObjectives: [
+                            "Engage with financial concepts through interactive experiences",
+                            "Apply theoretical knowledge in practical scenarios",
+                            "Develop decision-making skills in financial contexts",
+                        ],
+                    };
+            }
+        }
+    };
+
     // ----- MAIN RENDER -----
     return (
         <div className="bg-gray-50 min-h-screen">
@@ -710,6 +888,10 @@ const Home = () => {
                     </>
                 )}
             </div>
+            <ChatBot
+                currentLesson={getCurrentLesson()}
+                pageContext={getPageContext()}
+            />
         </div>
     );
 };
