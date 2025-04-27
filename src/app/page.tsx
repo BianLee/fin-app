@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import BeerDistributionGame from './BeerDistributionGame';
 import TariffSimulator from './TariffSimulator';
-
+import TariffGame from './TariffGame';
 const Home = () => {
   // State for controlling which visualization is displayed
   const [activeTab, setActiveTab] = useState('bonds');
@@ -106,6 +106,7 @@ const Home = () => {
       
       <BeerDistributionGame />
       <TariffSimulator/>
+      <TariffGame/>
 
       <h1 className="text-2xl font-bold text-center mb-6">Economics 135: Interactive Visualizations</h1>
       
