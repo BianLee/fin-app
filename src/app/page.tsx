@@ -1,19 +1,22 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const Home = () => {
   // State for controlling which visualization is displayed
   const [activeTab, setActiveTab] = useState('bonds');
   
-  // Data for interest rates and bond prices
-  const bondData = [
+  // Initial bond data
+  const initialBondData = [
     { price: 950, quantity: 100, interest: 5.3 },
     { price: 900, quantity: 200, interest: 11.1 },
     { price: 850, quantity: 300, interest: 17.6 },
     { price: 800, quantity: 400, interest: 25.0 },
     { price: 750, quantity: 500, interest: 33.0 },
   ];
+  
+  // State for dynamic bond data
+  const [bondData, setBondData] = useState(initialBondData);
   
   // Data for money supply and interest rates
   const moneyData = [
@@ -59,6 +62,40 @@ const Home = () => {
       interestRateEffect: demandShift - supplyShift < 0 ? 'Increase' : 'Decrease'
     };
   };
+  
+  // Update bond data based on sliders
+  useEffect(() => {
+    // Calculate new data points based on user inputs
+    // This is a simplified model - in a real app, you'd use more sophisticated equations
+    const newBondData = initialBondData.map(item => {
+      // Calculate price adjustment factor based on inputs
+      // More inflation = lower bond prices = higher interest rates
+      const inflationEffect = -expectedInflation * 10;
+      // More wealth = higher demand = higher prices = lower interest rates
+      const wealthEffect = wealthLevel * 8;
+      // More risk = lower demand = lower prices = higher interest rates
+      const riskEffect = -riskLevel * 7;
+      
+      // Combined adjustment factor
+      const adjustmentFactor = inflationEffect + wealthEffect + riskEffect;
+      
+      // Adjust price (constrained to reasonable bounds)
+      const newPrice = Math.max(500, Math.min(1100, item.price + adjustmentFactor));
+      
+      // Adjust interest rate inversely to price (simplified relationship)
+      // Using basic inverse relationship: interest = baseRate * (1000/price)
+      const baseRate = 10;
+      const newInterest = baseRate * (1000/newPrice);
+      
+      return {
+        ...item,
+        price: Math.round(newPrice),
+        interest: parseFloat(newInterest.toFixed(1))
+      };
+    });
+    
+    setBondData(newBondData);
+  }, [expectedInflation, wealthLevel, riskLevel]);
   
   const bondResult = calculateBondShift();
   
@@ -152,8 +189,8 @@ const Home = () => {
                 <LineChart data={bondData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="quantity" label={{ value: 'Quantity of Bonds', position: 'insideBottom', offset: -5 }} />
-                  <YAxis yAxisId="left" label={{ value: 'Price of Bonds', angle: -90, position: 'insideLeft' }} />
-                  <YAxis yAxisId="right" orientation="right" label={{ value: 'Interest Rate (%)', angle: 90, position: 'insideRight' }} />
+                  <YAxis yAxisId="left" domain={[500, 1100]} label={{ value: 'Price of Bonds', angle: -90, position: 'insideLeft' }} />
+                  <YAxis yAxisId="right" orientation="right" domain={[0, 40]} label={{ value: 'Interest Rate (%)', angle: 90, position: 'insideRight' }} />
                   <Tooltip />
                   <Legend />
                   <Line yAxisId="left" type="monotone" dataKey="price" stroke="#2563eb" name="Bond Price" />
