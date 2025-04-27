@@ -47,6 +47,12 @@ const BeerDistributionGame = () => {
   // Week 5 has a demand spike to 8 units
   customerDemand[4] = 8;
   
+  // Animation state for flow diagram
+  const [flowAnimation, setFlowAnimation] = useState({
+    orders: null,
+    shipments: null
+  });
+  
   // Function to process a player's order
   const placeOrder = () => {
     if (gameCompleted) return;
@@ -62,6 +68,27 @@ const BeerDistributionGame = () => {
       return newData;
     });
     
+    // Trigger order flow animation
+    const roleIndex = roles.indexOf(activeRole);
+    if (roleIndex < roles.length - 1) {
+      setFlowAnimation({
+        orders: {
+          from: roleIndex,
+          to: roleIndex + 1,
+          amount: orderAmount
+        },
+        shipments: null
+      });
+      
+      // Clear animation after a delay
+      setTimeout(() => {
+        setFlowAnimation({
+          orders: null,
+          shipments: null
+        });
+      }, 1500);
+    }
+    
     // Move to next role or next week
     const currentRoleIndex = roles.indexOf(activeRole);
     if (currentRoleIndex < roles.length - 1) {
@@ -75,6 +102,33 @@ const BeerDistributionGame = () => {
   
   // Process a week in the game
   const processWeek = () => {
+    // Animate shipment flows for all roles
+    const animateShipments = () => {
+      for (let i = roles.length - 1; i >= 0; i--) {
+        const shipmentAmount = gameData[roles[i]].outgoingShipments[0] || 0;
+        if (i > 0) {
+          setTimeout(() => {
+            setFlowAnimation({
+              orders: null,
+              shipments: {
+                from: i,
+                to: i - 1,
+                amount: shipmentAmount
+              }
+            });
+          }, (roles.length - i) * 800);
+        }
+      }
+      
+      // Clear animation after all shipments
+      setTimeout(() => {
+        setFlowAnimation({
+          orders: null,
+          shipments: null
+        });
+      }, (roles.length + 1) * 800);
+    };
+    
     setGameData(prevData => {
       const newData = JSON.parse(JSON.stringify(prevData));
       
@@ -132,6 +186,9 @@ const BeerDistributionGame = () => {
       return newData;
     });
     
+    // Animate shipment flows
+    animateShipments();
+    
     // Reset to first role for next week
     setActiveRole(roles[0]);
     setOrderAmount(4); // Reset to default order
@@ -178,6 +235,193 @@ const BeerDistributionGame = () => {
     };
   };
   
+  // Supply Chain Flow Diagram Component
+  const SupplyChainFlowDiagram = () => {
+    const getNodeColor = (roleName) => {
+      if (roleName === activeRole) return 'bg-blue-100 border-blue-500';
+      return 'bg-gray-100 border-gray-300';
+    };
+    
+    const getInventoryColor = (role) => {
+      const inventory = gameData[role].inventory;
+      if (inventory <= 2) return 'text-red-600';
+      if (inventory <= 5) return 'text-yellow-600';
+      return 'text-green-600';
+    };
+    
+    const getBacklogColor = (role) => {
+      const backlog = gameData[role].backlog;
+      if (backlog >= 10) return 'text-red-600';
+      if (backlog >= 5) return 'text-orange-600';
+      if (backlog > 0) return 'text-yellow-600';
+      return 'text-gray-600';
+    };
+    
+    const renderOrderAnimation = (from, to, amount) => {
+      const fromRatio = from / (roles.length);
+      const toRatio = to / (roles.length);
+      
+      const orderArrowStyle = {
+        left: `calc(${fromRatio * 100}% + 50px)`,
+        width: `calc(${(toRatio - fromRatio) * 100}% - 100px)`,
+        top: '25px',
+        height: '20px',
+        background: 'linear-gradient(to right, transparent, #3b82f6)',
+        position: 'absolute',
+        animation: 'flowRight 1.5s ease-in-out',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        fontWeight: 'bold',
+        zIndex: 10
+      };
+      
+      return (
+        <div style={orderArrowStyle} className="rounded">
+          <div className="bg-blue-500 px-2 py-1 rounded text-xs">{amount}</div>
+        </div>
+      );
+    };
+    
+    const renderShipmentAnimation = (from, to, amount) => {
+      const fromRatio = from / (roles.length);
+      const toRatio = to / (roles.length);
+      
+      const shipmentArrowStyle = {
+        left: `calc(${toRatio * 100}% + 50px)`,
+        width: `calc(${(fromRatio - toRatio) * 100}% - 100px)`,
+        bottom: '25px',
+        height: '20px',
+        background: 'linear-gradient(to left, transparent, #10b981)',
+        position: 'absolute',
+        animation: 'flowLeft 1.5s ease-in-out',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        fontWeight: 'bold',
+        zIndex: 10
+      };
+      
+      return (
+        <div style={shipmentArrowStyle} className="rounded">
+          <div className="bg-green-500 px-2 py-1 rounded text-xs">{amount}</div>
+        </div>
+      );
+    };
+    
+    // Add customer node to the left and supplier node to the right
+    const extendedRoles = ['Customers', ...roles, 'Raw Materials'];
+    
+    return (
+      <div className="relative mt-8 p-8 bg-white rounded-lg shadow-md mb-8">
+        <h3 className="font-semibold mb-6 text-center">Supply Chain Flow Diagram - Week {currentWeek}</h3>
+        
+        <div className="relative h-64">
+          {/* Render static flow lines */}
+          <div className="absolute top-1/3 left-0 right-0 h-0.5 bg-blue-200" />
+          <div className="absolute bottom-1/3 left-0 right-0 h-0.5 bg-green-200" />
+          
+          {/* Order Information Flow (top arrow) */}
+          <div className="absolute top-16 left-0 right-0 text-center text-sm text-blue-600 font-medium">
+            Order Information Flow
+          </div>
+          
+          {/* Beer Flow (bottom arrow) */}
+          <div className="absolute bottom-16 left-0 right-0 text-center text-sm text-green-600 font-medium">
+            Beer Shipment Flow
+          </div>
+          
+          {/* Role Nodes */}
+          <div className="flex justify-between relative z-20">
+            {extendedRoles.map((role, index) => {
+              const isEndpoint = index === 0 || index === extendedRoles.length - 1;
+              const isActualRole = roles.includes(role);
+              
+              return (
+                <div key={role} className="flex flex-col items-center" style={{width: `${100 / extendedRoles.length}%`}}>
+                  <div className={`w-24 h-24 flex flex-col items-center justify-center rounded-lg border-2 shadow-sm
+                    ${isEndpoint ? 'bg-gray-50 border-gray-200' : getNodeColor(role)}`}>
+                    <div className="font-medium text-center">{role}</div>
+                    
+                    {isActualRole && (
+                      <>
+                        <div className={`text-sm ${getInventoryColor(role)}`}>
+                          Inv: {gameData[role].inventory}
+                        </div>
+                        <div className={`text-sm ${getBacklogColor(role)}`}>
+                          Backlog: {gameData[role].backlog}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* Pending Orders */}
+                  {isActualRole && (
+                    <div className="mt-3 flex flex-col items-center">
+                      <div className="text-xs text-gray-500">Pending Orders</div>
+                      <div className="flex space-x-1 mt-1">
+                        {gameData[role].placedOrders.map((order, idx) => (
+                          <div key={idx} className="w-5 h-5 bg-blue-100 border border-blue-300 rounded-full flex items-center justify-center text-xs">
+                            {order}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Pending Shipments */}
+                  {isActualRole && (
+                    <div className="mt-2 flex flex-col items-center">
+                      <div className="text-xs text-gray-500">Pending Shipments</div>
+                      <div className="flex space-x-1 mt-1">
+                        {gameData[role].outgoingShipments.map((shipment, idx) => (
+                          <div key={idx} className="w-5 h-5 bg-green-100 border border-green-300 rounded-full flex items-center justify-center text-xs">
+                            {shipment}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Render animations */}
+          {flowAnimation.orders && renderOrderAnimation(
+            flowAnimation.orders.from + 1,  // +1 to account for the customer node
+            flowAnimation.orders.to + 1, 
+            flowAnimation.orders.amount
+          )}
+          
+          {flowAnimation.shipments && renderShipmentAnimation(
+            flowAnimation.shipments.from + 1,  // +1 to account for the customer node
+            flowAnimation.shipments.to + 1, 
+            flowAnimation.shipments.amount
+          )}
+        </div>
+        
+        {/* Animation legend */}
+        <div className="flex justify-center space-x-6 mt-4">
+          <div className="flex items-center">
+            <div className="w-4 h-4 bg-blue-500 rounded mr-2"></div>
+            <span className="text-sm">Order Flow</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-4 h-4 bg-green-500 rounded mr-2"></div>
+            <span className="text-sm">Shipment Flow</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-4 h-4 bg-blue-100 border border-blue-500 rounded mr-2"></div>
+            <span className="text-sm">Active Role</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
       <h1 className="text-2xl font-bold text-center mb-4">Beer Distribution Game</h1>
@@ -211,53 +455,58 @@ const BeerDistributionGame = () => {
       )}
       
       {gameStarted && !gameCompleted && (
-        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Week {currentWeek}/{gameLength}</h2>
-            <div className="px-4 py-1 bg-blue-100 text-blue-800 rounded-full">
-              Playing as: <strong>{activeRole}</strong>
-            </div>
-          </div>
+        <>
+          {/* Supply Chain Flow Diagram */}
+          {gameStarted && !showInstructions && <SupplyChainFlowDiagram />}
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="p-4 bg-gray-100 rounded-lg">
-              <h3 className="font-semibold mb-2">Inventory Status</h3>
-              <p>Current Inventory: <strong>{gameData[activeRole].inventory}</strong> units</p>
-              <p>Backlogged Orders: <strong>{gameData[activeRole].backlog}</strong> units</p>
-              <p>Accumulated Costs: <strong>${gameData[activeRole].costs.toFixed(2)}</strong></p>
+          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Week {currentWeek}/{gameLength}</h2>
+              <div className="px-4 py-1 bg-blue-100 text-blue-800 rounded-full">
+                Playing as: <strong>{activeRole}</strong>
+              </div>
             </div>
             
-            <div className="p-4 bg-gray-100 rounded-lg">
-              <h3 className="font-semibold mb-2">Order Information</h3>
-              <p>Incoming Order: <strong>{gameData[activeRole].incomingOrders[0] || 0}</strong> units</p>
-              {activeRole === 'Retailer' && currentWeek > 1 && (
-                <p className="text-sm mt-2">This is the customer demand for this week.</p>
-              )}
-              <p>Expected Incoming Shipment: <strong>{gameData[activeRole].incomingShipments[0] || 0}</strong> units</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="p-4 bg-gray-100 rounded-lg">
+                <h3 className="font-semibold mb-2">Inventory Status</h3>
+                <p>Current Inventory: <strong>{gameData[activeRole].inventory}</strong> units</p>
+                <p>Backlogged Orders: <strong>{gameData[activeRole].backlog}</strong> units</p>
+                <p>Accumulated Costs: <strong>${gameData[activeRole].costs.toFixed(2)}</strong></p>
+              </div>
+              
+              <div className="p-4 bg-gray-100 rounded-lg">
+                <h3 className="font-semibold mb-2">Order Information</h3>
+                <p>Incoming Order: <strong>{gameData[activeRole].incomingOrders[0] || 0}</strong> units</p>
+                {activeRole === 'Retailer' && currentWeek > 1 && (
+                  <p className="text-sm mt-2">This is the customer demand for this week.</p>
+                )}
+                <p>Expected Incoming Shipment: <strong>{gameData[activeRole].incomingShipments[0] || 0}</strong> units</p>
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <h3 className="font-semibold mb-2">Place Your Order</h3>
+              <p className="mb-2">How many units would you like to order from your supplier?</p>
+              <div className="flex items-center">
+                <input
+                  type="number"
+                  min="0"
+                  max="30"
+                  value={orderAmount}
+                  onChange={(e) => setOrderAmount(parseInt(e.target.value) || 0)}
+                  className="px-4 py-2 border rounded w-24 mr-4"
+                />
+                <button 
+                  onClick={placeOrder}
+                  className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Place Order
+                </button>
+              </div>
             </div>
           </div>
-          
-          <div className="mb-6">
-            <h3 className="font-semibold mb-2">Place Your Order</h3>
-            <p className="mb-2">How many units would you like to order from your supplier?</p>
-            <div className="flex items-center">
-              <input
-                type="number"
-                min="0"
-                max="30"
-                value={orderAmount}
-                onChange={(e) => setOrderAmount(parseInt(e.target.value) || 0)}
-                className="px-4 py-2 border rounded w-24 mr-4"
-              />
-              <button 
-                onClick={placeOrder}
-                className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Place Order
-              </button>
-            </div>
-          </div>
-        </div>
+        </>
       )}
       
       {gameCompleted && (
@@ -373,6 +622,19 @@ const BeerDistributionGame = () => {
           </button>
         )}
       </div>
+      
+      {/* CSS for animations */}
+      <style jsx global>{`
+        @keyframes flowRight {
+          0% { width: 0; opacity: 0; }
+          100% { opacity: 1; }
+        }
+        
+        @keyframes flowLeft {
+          0% { width: 0; opacity: 0; }
+          100% { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };
