@@ -102,7 +102,7 @@ const Home = () => {
   const renderMainNav = () => (
     <nav className="bg-blue-800 text-white py-3 px-4 mb-6">
       <div className="container mx-auto flex justify-between items-center">
-        <div className="text-xl font-bold">Economics 135</div>
+        <div className="text-xl font-bold">Economics</div>
         <div className="flex space-x-6">
           <button 
             className={`px-4 py-2 rounded transition ${mainCategory === 'finance' ? 'bg-blue-600' : 'hover:bg-blue-700'}`}
