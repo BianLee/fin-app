@@ -10,6 +10,7 @@ const Home = () => {
   const [mainCategory, setMainCategory] = useState('finance'); // 'finance' or 'games'
   const [financeTab, setFinanceTab] = useState('bonds');
   const [gameTab, setGameTab] = useState('beer');
+  const [analysisTab, setAnalysisTab] = useState("fedfund");
   
   // ----- DATA DEFINITIONS -----
   // Initial bond data
@@ -116,6 +117,12 @@ const Home = () => {
           >
             Economic Simulations
           </button>
+          <button 
+            className={`px-4 py-2 rounded transition ${mainCategory === 'analysis' ? 'bg-blue-600' : 'hover:bg-blue-700'}`}
+            onClick={() => setMainCategory('analysis')}
+          >
+            Analysis
+          </button>
         </div>
       </div>
     </nav>
@@ -171,6 +178,23 @@ const Home = () => {
         onClick={() => setGameTab('tariff-game')}
       >
         Tariff Game
+      </button>
+    </div>
+  );
+
+  const renderAnalysisTabs = () => (
+    <div className="flex justify-center gap-4 mb-6 flex-wrap">
+      <button 
+        className={`px-4 py-2 rounded-t border-b-2 transition ${analysisTab === 'fedfund' ? 'border-blue-600 text-blue-600' : 'border-transparent hover:text-blue-500'}`}
+        onClick={() => setAnalysisTab('fedfund')}
+      >
+        FEDFUND
+      </button>
+      <button 
+        className={`px-4 py-2 rounded-t border-b-2 transition ${gameTab === 'unemployment' ? 'border-blue-600 text-blue-600' : 'border-transparent hover:text-blue-500'}`}
+        onClick={() => setAnalysisTab('unemployment')}
+      >
+        UNEMPLOYMENT
       </button>
     </div>
   );
@@ -448,6 +472,14 @@ const Home = () => {
             {gameTab === 'beer' && renderBeerGame()}
             {gameTab === 'tariff-sim' && renderTariffSimulator()}
             {gameTab === 'tariff-game' && renderTariffGame()}
+          </>
+        )}
+
+        {mainCategory === 'analysis' && (
+          <>
+            {renderAnalysisTabs()}
+            {analysisTab === 'fedfund'}
+            {analysisTab === 'unemployment'}
           </>
         )}
       </div>
