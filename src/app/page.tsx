@@ -14,12 +14,15 @@ import BeerDistributionGame from "./BeerDistributionGame";
 import TariffSimulator from "./TariffSimulator";
 import TariffGame from "./TariffGame";
 import ChatBot from "../components/ChatBot";
+import UnemployedAnalysis from "./UnemploymentAnalysis"
+import IndustrialProductionChart from "./IndustrialProductionChart"
 
 const Home = () => {
     // Navigation state management
     const [mainCategory, setMainCategory] = useState("finance"); // 'finance' or 'games'
     const [financeTab, setFinanceTab] = useState("bonds");
     const [gameTab, setGameTab] = useState("beer");
+    const [analysisTab, setAnalysisTab] = useState("unemployed");
 
     // ----- DATA DEFINITIONS -----
     // Initial bond data
@@ -148,6 +151,16 @@ const Home = () => {
                     >
                         Economic Simulations
                     </button>
+                    <button
+                        className={`px-4 py-2 rounded transition ${
+                            mainCategory === "analysis"
+                                ? "bg-blue-600"
+                                : "hover:bg-blue-700"
+                        }`}
+                        onClick={() => setMainCategory("analysis")}
+                    >
+                        Analysis
+                    </button>
                 </div>
             </div>
         </nav>
@@ -234,6 +247,31 @@ const Home = () => {
             </button>
         </div>
     );
+
+    const renderAnalysisTabs = () => (
+      <div className="flex justify-center gap-4 mb-6 flex-wrap">
+          <button
+              className={`px-4 py-2 rounded-t border-b-2 transition ${
+                  gameTab === "unemployed"
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent hover:text-blue-500"
+              }`}
+              onClick={() => setAnalysisTab("unemployed")}
+          >
+              Unemployed
+          </button>
+          <button
+              className={`px-4 py-2 rounded-t border-b-2 transition ${
+                  gameTab === "industrial"
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent hover:text-blue-500"
+              }`}
+              onClick={() => setAnalysisTab("industrial")}
+          >
+              Industrial Production
+          </button>
+      </div>
+  );
 
     // Bond Market Visualization
     const renderBondMarket = () => (
@@ -885,6 +923,15 @@ const Home = () => {
                         {gameTab === "beer" && renderBeerGame()}
                         {gameTab === "tariff-sim" && renderTariffSimulator()}
                         {gameTab === "tariff-game" && renderTariffGame()}
+                    </>
+                )}
+
+                {mainCategory === "analysis" && (
+                    <>
+                        {renderAnalysisTabs()}
+                        {analysisTab === "unemployed" && <UnemployedAnalysis/>}
+                        {analysisTab === "industrial" && <IndustrialProductionChart/>}
+
                     </>
                 )}
             </div>
