@@ -24,7 +24,7 @@ const FedFundAnalysis = () => {
       try {
         setLoading(true);
         // Load the CSV file from public directory using window.fs API
-        const csvText = await window.fs.readFile('/public/FEDFUNDS.csv', { encoding: 'utf8' });
+        const csvText = await window.fs.readFile('FEDFUNDS.csv', { encoding: 'utf8' });
         
         // Parse CSV data
         Papa.parse(csvText, {

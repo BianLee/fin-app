@@ -1,79 +1,196 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush, AreaChart, Area, ComposedChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import Papa from 'papaparse';
 
-const UnemploymentAnalysis = () => {
-  const [unemploymentData, setUnemploymentData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [dateRange, setDateRange] = useState('all'); // 'all', '10years', '5years', '2years', '1year'
-  const [viewMode, setViewMode] = useState('trend'); // 'trend', 'comparison', 'demographics'
+// Hardcoded data matching your CSV structure
+const HARDCODED_DATA = [
+  { observation_date: "1994-01-01", UNRATE: 6.6 },
+  { observation_date: "1994-02-01", UNRATE: 6.6 },
+  { observation_date: "1994-03-01", UNRATE: 6.5 },
+  { observation_date: "1994-04-01", UNRATE: 6.4 },
+  { observation_date: "1994-05-01", UNRATE: 6.1 },
+  { observation_date: "1994-06-01", UNRATE: 6.1 },
+  { observation_date: "1994-07-01", UNRATE: 6.1 },
+  { observation_date: "1994-08-01", UNRATE: 6.0 },
+  { observation_date: "1994-09-01", UNRATE: 5.9 },
+  { observation_date: "1994-10-01", UNRATE: 5.8 },
+  { observation_date: "1994-11-01", UNRATE: 5.6 },
+  { observation_date: "1994-12-01", UNRATE: 5.5 },
+  { observation_date: "1995-01-01", UNRATE: 5.6 },
+  { observation_date: "1995-02-01", UNRATE: 5.4 },
+  { observation_date: "1995-03-01", UNRATE: 5.4 },
+  { observation_date: "1995-04-01", UNRATE: 5.8 },
+  { observation_date: "1995-05-01", UNRATE: 5.6 },
+  { observation_date: "1995-06-01", UNRATE: 5.6 },
+  { observation_date: "1995-07-01", UNRATE: 5.7 },
+  { observation_date: "1995-08-01", UNRATE: 5.7 },
+  { observation_date: "1995-09-01", UNRATE: 5.6 },
+  { observation_date: "1995-10-01", UNRATE: 5.5 },
+  { observation_date: "1995-11-01", UNRATE: 5.6 },
+  { observation_date: "1995-12-01", UNRATE: 5.6 },
+  { observation_date: "1996-01-01", UNRATE: 5.6 },
+  { observation_date: "1996-02-01", UNRATE: 5.5 },
+  { observation_date: "1996-03-01", UNRATE: 5.5 },
+  { observation_date: "1996-04-01", UNRATE: 5.6 },
+  { observation_date: "1996-05-01", UNRATE: 5.6 },
+  { observation_date: "1996-06-01", UNRATE: 5.3 },
+  { observation_date: "1996-07-01", UNRATE: 5.5 },
+  { observation_date: "1996-08-01", UNRATE: 5.1 },
+  { observation_date: "1996-09-01", UNRATE: 5.2 },
+  { observation_date: "1996-10-01", UNRATE: 5.2 },
+  { observation_date: "1996-11-01", UNRATE: 5.4 },
+  { observation_date: "1996-12-01", UNRATE: 5.4 },
+  { observation_date: "1997-01-01", UNRATE: 5.3 },
+  { observation_date: "1997-02-01", UNRATE: 5.2 },
+  { observation_date: "1997-03-01", UNRATE: 5.2 },
+  { observation_date: "1997-04-01", UNRATE: 5.1 },
+  { observation_date: "1997-05-01", UNRATE: 4.9 },
+  { observation_date: "1997-06-01", UNRATE: 5.0 },
+  { observation_date: "1997-07-01", UNRATE: 4.9 },
+  { observation_date: "1997-08-01", UNRATE: 4.8 },
+  { observation_date: "1997-09-01", UNRATE: 4.9 },
+  { observation_date: "1997-10-01", UNRATE: 4.7 },
+  { observation_date: "1997-11-01", UNRATE: 4.6 },
+  { observation_date: "1997-12-01", UNRATE: 4.7 },
+  { observation_date: "1998-01-01", UNRATE: 4.6 },
+  { observation_date: "1998-02-01", UNRATE: 4.6 },
+  { observation_date: "1998-03-01", UNRATE: 4.7 },
+  { observation_date: "1998-04-01", UNRATE: 4.3 },
+  { observation_date: "1998-05-01", UNRATE: 4.4 },
+  { observation_date: "1998-06-01", UNRATE: 4.5 },
+  { observation_date: "1998-07-01", UNRATE: 4.5 },
+  { observation_date: "1998-08-01", UNRATE: 4.5 },
+  { observation_date: "1998-09-01", UNRATE: 4.6 },
+  { observation_date: "1998-10-01", UNRATE: 4.5 },
+  { observation_date: "1998-11-01", UNRATE: 4.4 },
+  { observation_date: "1998-12-01", UNRATE: 4.4 },
+  { observation_date: "1999-01-01", UNRATE: 4.3 },
+  { observation_date: "1999-02-01", UNRATE: 4.4 },
+  { observation_date: "1999-03-01", UNRATE: 4.2 },
+  { observation_date: "1999-04-01", UNRATE: 4.3 },
+  { observation_date: "1999-05-01", UNRATE: 4.2 },
+  { observation_date: "1999-06-01", UNRATE: 4.3 },
+  { observation_date: "1999-07-01", UNRATE: 4.3 },
+  { observation_date: "1999-08-01", UNRATE: 4.2 },
+  { observation_date: "1999-09-01", UNRATE: 4.2 },
+  { observation_date: "1999-10-01", UNRATE: 4.1 },
+  { observation_date: "1999-11-01", UNRATE: 4.1 },
+  { observation_date: "1999-12-01", UNRATE: 4.0 },
+  { observation_date: "2000-01-01", UNRATE: 4.0 },
+  { observation_date: "2000-02-01", UNRATE: 4.1 },
+  { observation_date: "2000-03-01", UNRATE: 4.0 },
+  { observation_date: "2000-04-01", UNRATE: 3.8 },
+  { observation_date: "2000-05-01", UNRATE: 4.0 },
+  { observation_date: "2000-06-01", UNRATE: 4.0 },
+  { observation_date: "2000-07-01", UNRATE: 4.0 },
+  { observation_date: "2000-08-01", UNRATE: 4.1 },
+  { observation_date: "2000-09-01", UNRATE: 3.9 },
+  { observation_date: "2000-10-01", UNRATE: 3.9 },
+  { observation_date: "2000-11-01", UNRATE: 3.9 },
+  { observation_date: "2000-12-01", UNRATE: 3.9 },
+  { observation_date: "2001-01-01", UNRATE: 4.2 },
+  { observation_date: "2001-02-01", UNRATE: 4.2 },
+  { observation_date: "2001-03-01", UNRATE: 4.3 },
+  { observation_date: "2001-04-01", UNRATE: 4.4 },
+  { observation_date: "2001-05-01", UNRATE: 4.3 },
+  { observation_date: "2001-06-01", UNRATE: 4.5 },
+  { observation_date: "2001-07-01", UNRATE: 4.6 },
+  { observation_date: "2001-08-01", UNRATE: 4.9 },
+  { observation_date: "2001-09-01", UNRATE: 5.0 },
+  { observation_date: "2001-10-01", UNRATE: 5.3 },
+  { observation_date: "2001-11-01", UNRATE: 5.5 },
+  { observation_date: "2001-12-01", UNRATE: 5.7 },
+  { observation_date: "2002-01-01", UNRATE: 5.7 },
+  { observation_date: "2002-02-01", UNRATE: 5.7 },
+  { observation_date: "2002-03-01", UNRATE: 5.7 },
+  { observation_date: "2002-04-01", UNRATE: 5.9 },
+  { observation_date: "2002-05-01", UNRATE: 5.8 },
+  { observation_date: "2002-06-01", UNRATE: 5.8 },
+  { observation_date: "2002-07-01", UNRATE: 5.8 },
+  { observation_date: "2002-08-01", UNRATE: 5.7 },
+  { observation_date: "2002-09-01", UNRATE: 5.7 },
+  { observation_date: "2002-10-01", UNRATE: 5.7 },
+  { observation_date: "2002-11-01", UNRATE: 5.9 },
+  { observation_date: "2002-12-01", UNRATE: 6.0 },
+  { observation_date: "2003-01-01", UNRATE: 5.8 },
+  { observation_date: "2003-02-01", UNRATE: 5.9 },
+  { observation_date: "2003-03-01", UNRATE: 5.9 },
+  { observation_date: "2003-04-01", UNRATE: 6.0 },
+  { observation_date: "2003-05-01", UNRATE: 6.1 },
+  { observation_date: "2003-06-01", UNRATE: 6.3 },
+  { observation_date: "2003-07-01", UNRATE: 6.2 },
+  { observation_date: "2003-08-01", UNRATE: 6.1 },
+  { observation_date: "2003-09-01", UNRATE: 6.1 },
+  { observation_date: "2003-10-01", UNRATE: 6.0 },
+  { observation_date: "2003-11-01", UNRATE: 5.8 },
+  { observation_date: "2003-12-01", UNRATE: 5.7 },
+  { observation_date: "2004-01-01", UNRATE: 5.7 },
+  { observation_date: "2004-02-01", UNRATE: 5.6 },
+  { observation_date: "2004-03-01", UNRATE: 5.8 },
+  { observation_date: "2004-04-01", UNRATE: 5.6 },
+  { observation_date: "2004-05-01", UNRATE: 5.6 },
+  { observation_date: "2004-06-01", UNRATE: 5.6 },
+  { observation_date: "2004-07-01", UNRATE: 5.5 },
+  { observation_date: "2004-08-01", UNRATE: 5.4 },
+  { observation_date: "2004-09-01", UNRATE: 5.4 },
+  { observation_date: "2004-10-01", UNRATE: 5.5 },
+  { observation_date: "2004-11-01", UNRATE: 5.4 },
+  { observation_date: "2004-12-01", UNRATE: 5.4 },
+  { observation_date: "2005-01-01", UNRATE: 5.3 },
+  { observation_date: "2005-02-01", UNRATE: 5.4 },
+  { observation_date: "2005-03-01", UNRATE: 5.2 },
+  { observation_date: "2005-04-01", UNRATE: 5.2 },
+  { observation_date: "2005-05-01", UNRATE: 5.1 },
+  { observation_date: "2005-06-01", UNRATE: 5.0 },
+  { observation_date: "2005-07-01", UNRATE: 5.0 },
+  { observation_date: "2005-08-01", UNRATE: 4.9 },
+  { observation_date: "2005-09-01", UNRATE: 5.0 },
+  { observation_date: "2005-10-01", UNRATE: 5.0 },
+  { observation_date: "2005-11-01", UNRATE: 5.0 },
+  { observation_date: "2005-12-01", UNRATE: 4.9 },
+  { observation_date: "2006-01-01", UNRATE: 4.7 },
+  { observation_date: "2006-02-01", UNRATE: 4.8 },
+  { observation_date: "2006-03-01", UNRATE: 4.7 },
+  { observation_date: "2006-04-01", UNRATE: 4.7 },
+  { observation_date: "2006-05-01", UNRATE: 4.6 },
+  { observation_date: "2006-06-01", UNRATE: 4.6 },
+  { observation_date: "2006-07-01", UNRATE: 4.7 },
+  { observation_date: "2006-08-01", UNRATE: 4.7 },
+  { observation_date: "2006-09-01", UNRATE: 4.5 },
+  { observation_date: "2006-10-01", UNRATE: 4.4 },
+  { observation_date: "2006-11-01", UNRATE: 4.5 },
+  { observation_date: "2006-12-01", UNRATE: 4.4 },
+  { observation_date: "2007-01-01", UNRATE: 4.6 },
+  { observation_date: "2007-02-01", UNRATE: 4.5 },
+  { observation_date: "2007-03-01", UNRATE: 4.4 },
+  { observation_date: "2007-04-01", UNRATE: 4.5 },
+  { observation_date: "2007-05-01", UNRATE: 4.4 },
+  { observation_date: "2007-06-01", UNRATE: 4.6 },
+  { observation_date: "2007-07-01", UNRATE: 4.7 },
+  { observation_date: "2007-08-01", UNRATE: 4.6 },
+  { observation_date: "2007-09-01", UNRATE: 4.7 },
+  { observation_date: "2007-10-01", UNRATE: 4.7 },
+  { observation_date: "2007-11-01", UNRATE: 4.7 },
+  { observation_date: "2007-12-01", UNRATE: 5.0 }
+];
+
+const UnemploymentChartWithCSVData = () => {
+  const [unemploymentData, setUnemploymentData] = useState(HARDCODED_DATA);
+  const [dateRange, setDateRange] = useState('all');
   
-  // Sample demographic categories (for demonstration)
-  const demographicGroups = [
-    { id: 'overall', name: 'Overall', color: '#2563eb' },
-    { id: 'male', name: 'Male', color: '#3b82f6' },
-    { id: 'female', name: 'Female', color: '#ec4899' },
-    { id: 'white', name: 'White', color: '#6b7280' },
-    { id: 'black', name: 'Black', color: '#1d4ed8' },
-    { id: 'hispanic', name: 'Hispanic', color: '#84cc16' },
-    { id: 'asian', name: 'Asian', color: '#ea580c' },
-    { id: 'youth', name: '16-24 years', color: '#8b5cf6' }
-  ];
-
-  useEffect(() => {
-    const loadUnemploymentData = async () => {
-      try {
-        setLoading(true);
-        // Load the CSV file from public directory using window.fs API
-        const csvText = await window.fs.readFile('/public/UNRATE.csv', { encoding: 'utf8' });
-        
-        // Parse CSV data
-        Papa.parse(csvText, {
-          header: true,
-          dynamicTyping: true,
-          skipEmptyLines: true,
-          complete: (results) => {
-            // Transform data for charting
-            const transformedData = results.data.map(row => {
-              // Assuming date format is YYYY-MM-DD in the CSV
-              // And that we have columns for different demographic categories
-              return {
-                date: row.date || row.DATE, // Handle different possible column names
-                overall: row.overall || row.UNRATE || row.unemployment, // Handle different possible column names
-                // Include demographics if available
-                male: row.male,
-                female: row.female,
-                white: row.white,
-                black: row.black,
-                hispanic: row.hispanic,
-                asian: row.asian,
-                youth: row.youth || row['16-24']
-              };
-            }).filter(item => item.date && item.overall !== undefined);
-            
-            // Sort by date if needed
-            transformedData.sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            setUnemploymentData(transformedData);
-            setLoading(false);
-          },
-          error: (error) => {
-            console.error('Error parsing CSV:', error);
-            setError('Failed to parse data');
-            setLoading(false);
-          }
-        });
-      } catch (err) {
-        console.error('Error loading data:', err);
-        setError('Failed to load data');
-        setLoading(false);
-      }
-    };
-
-    loadUnemploymentData();
-  }, []);
+  // Format date for display (convert YYYY-MM-DD to MMM YYYY)
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    } catch (e) {
+      console.error("Error formatting date:", e);
+      return dateString;
+    }
+  };
 
   // Filter data based on selected date range
   const getFilteredData = () => {
@@ -81,7 +198,7 @@ const UnemploymentAnalysis = () => {
       return unemploymentData;
     }
 
-    const now = new Date();
+    const now = new Date('2007-12-01'); // Use the last date in your dataset as reference
     let startDate;
 
     switch (dateRange) {
@@ -101,134 +218,43 @@ const UnemploymentAnalysis = () => {
         return unemploymentData;
     }
 
-    return unemploymentData.filter(item => new Date(item.date) >= startDate);
+    return unemploymentData.filter(item => new Date(item.observation_date) >= startDate);
   };
 
   const filteredData = getFilteredData();
 
-  // Format date for display
-  const formatDate = (date) => {
-    if (!date) return '';
-    const d = new Date(date);
-    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
-  };
-
-  // Get min and max values for y-axis domain
+  // Get min and max values for y-axis domain with some padding
   const getYAxisDomain = () => {
-    if (filteredData.length === 0) return [0, 10]; // Default domain
+    if (filteredData.length === 0) return [0, 10];
     
-    // For trend view, just look at overall rate
-    if (viewMode === 'trend') {
-      const rates = filteredData.map(item => item.overall);
-      const min = Math.floor(Math.min(...rates));
-      const max = Math.ceil(Math.max(...rates));
-      return [Math.max(0, min - 1), max + 1];
-    }
+    const rates = filteredData.map(item => Number(item.UNRATE));
+    const min = Math.floor(Math.min(...rates));
+    const max = Math.ceil(Math.max(...rates));
     
-    // For demographic comparison, consider all demographic values
-    const allRates = [];
-    demographicGroups.forEach(group => {
-      filteredData.forEach(item => {
-        if (item[group.id] !== undefined) {
-          allRates.push(item[group.id]);
-        }
-      });
-    });
-    
-    if (allRates.length === 0) return [0, 10];
-    
-    const min = Math.floor(Math.min(...allRates));
-    const max = Math.ceil(Math.max(...allRates));
-    return [Math.max(0, min - 1), max + 1];
+    return [Math.max(0, min - 0.5), max + 0.5];
   };
-
-  // Prepare demographic data for most recent period
-  const getLatestDemographicData = () => {
-    if (filteredData.length === 0) return [];
-    
-    const latestData = filteredData[filteredData.length - 1];
-    return demographicGroups
-      .filter(group => latestData[group.id] !== undefined)
-      .map(group => ({
-        name: group.name,
-        value: latestData[group.id],
-        color: group.color
-      }))
-      .sort((a, b) => b.value - a.value); // Sort highest to lowest
-  };
-
-  // Calculate the current 12-month change in unemployment
-  const getYearOverYearChange = () => {
-    if (filteredData.length < 13) return null;
-    
-    const current = filteredData[filteredData.length - 1].overall;
-    const yearAgo = filteredData[filteredData.length - 13].overall;
-    
-    return {
-      absolute: (current - yearAgo).toFixed(1),
-      percent: (((current - yearAgo) / yearAgo) * 100).toFixed(1)
-    };
-  };
-
-  const yearOverYearChange = getYearOverYearChange();
-
-  if (loading) {
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Unemployment Rate Analysis</h2>
-        <div className="flex justify-center items-center h-64">
-          <div className="text-gray-500">Loading data...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Unemployment Rate Analysis</h2>
-        <div className="flex justify-center items-center h-64">
-          <div className="text-red-500">Error: {error}</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-4">Unemployment Rate Analysis</h2>
+      
       <p className="mb-4">
         The unemployment rate measures the share of workers in the labor force who do not currently have a job but are actively looking for work.
       </p>
       
-      <div className="flex flex-wrap gap-4 mb-6">
-        <div>
-          <label className="mr-2 font-medium">Time Period:</label>
-          <select 
-            className="border rounded p-1" 
-            value={dateRange} 
-            onChange={(e) => setDateRange(e.target.value)}
-          >
-            <option value="all">All Data</option>
-            <option value="10years">Last 10 Years</option>
-            <option value="5years">Last 5 Years</option>
-            <option value="2years">Last 2 Years</option>
-            <option value="1year">Last Year</option>
-          </select>
-        </div>
-        
-        <div>
-          <label className="mr-2 font-medium">View Mode:</label>
-          <select 
-            className="border rounded p-1" 
-            value={viewMode} 
-            onChange={(e) => setViewMode(e.target.value)}
-          >
-            <option value="trend">Historical Trend</option>
-            <option value="comparison">Demographic Comparison</option>
-            <option value="demographics">Current Demographics</option>
-          </select>
-        </div>
+      <div className="mb-4">
+        <label className="mr-2 font-medium">Time Period:</label>
+        <select 
+          className="border rounded p-1" 
+          value={dateRange} 
+          onChange={(e) => setDateRange(e.target.value)}
+        >
+          <option value="all">All Data (1994-2007)</option>
+          <option value="10years">Last 10 Years</option>
+          <option value="5years">Last 5 Years</option>
+          <option value="2years">Last 2 Years</option>
+          <option value="1year">Last Year</option>
+        </select>
       </div>
       
       {/* Current unemployment stats */}
@@ -237,159 +263,83 @@ const UnemploymentAnalysis = () => {
           <div className="bg-blue-50 p-4 rounded-lg text-center">
             <div className="text-sm text-gray-600">Current Unemployment Rate</div>
             <div className="text-3xl font-bold text-blue-600">
-              {filteredData[filteredData.length - 1].overall.toFixed(1)}%
+              {Number(filteredData[filteredData.length - 1].UNRATE).toFixed(1)}%
             </div>
             <div className="text-xs text-gray-500">
-              {formatDate(filteredData[filteredData.length - 1].date)}
+              {formatDate(filteredData[filteredData.length - 1].observation_date)}
             </div>
           </div>
           
-          {yearOverYearChange && (
-            <div className={`p-4 rounded-lg text-center ${yearOverYearChange.absolute < 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-              <div className="text-sm text-gray-600">Year-over-Year Change</div>
-              <div className={`text-2xl font-bold ${yearOverYearChange.absolute < 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {yearOverYearChange.absolute > 0 ? '+' : ''}{yearOverYearChange.absolute}%
-              </div>
-              <div className="text-xs text-gray-500">
-                ({yearOverYearChange.absolute > 0 ? '+' : ''}{yearOverYearChange.percent}%)
-              </div>
-            </div>
-          )}
-          
           <div className="bg-gray-50 p-4 rounded-lg text-center">
-            <div className="text-sm text-gray-600">Historical Peak</div>
-            <div className="text-2xl font-bold text-gray-800">
-              {Math.max(...filteredData.map(d => d.overall)).toFixed(1)}%
+            <div className="text-sm text-gray-600">Historical Low</div>
+            <div className="text-2xl font-bold text-green-600">
+              {Math.min(...filteredData.map(d => Number(d.UNRATE))).toFixed(1)}%
             </div>
             <div className="text-xs text-gray-500">
-              {formatDate(filteredData.find(d => d.overall === Math.max(...filteredData.map(d => d.overall))).date)}
+              {formatDate(filteredData.find(d => Number(d.UNRATE) === Math.min(...filteredData.map(d => Number(d.UNRATE)))).observation_date)}
+            </div>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-lg text-center">
+            <div className="text-sm text-gray-600">Historical High</div>
+            <div className="text-2xl font-bold text-red-600">
+              {Math.max(...filteredData.map(d => Number(d.UNRATE))).toFixed(1)}%
+            </div>
+            <div className="text-xs text-gray-500">
+              {formatDate(filteredData.find(d => Number(d.UNRATE) === Math.max(...filteredData.map(d => Number(d.UNRATE)))).observation_date)}
             </div>
           </div>
         </div>
       )}
       
-      <div className="h-96 w-full">
-        {viewMode === 'trend' && (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={filteredData}
-              margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="date" 
-                tickFormatter={formatDate}
-                angle={-45}
-                textAnchor="end"
-                height={50}
-              />
-              <YAxis 
-                domain={getYAxisDomain()}
-                label={{ value: 'Rate (%)', angle: -90, position: 'insideLeft' }}
-              />
-              <Tooltip 
-                labelFormatter={formatDate}
-                formatter={(value) => [`${value.toFixed(1)}%`, 'Unemployment Rate']}
-              />
-              <Legend />
-              <Area 
-                type="monotone" 
-                dataKey="overall" 
-                stroke="#2563eb"
-                fill="#dbeafe" 
-                name="Unemployment Rate (%)"
-              />
-              <Brush 
-                dataKey="date" 
-                height={30} 
-                stroke="#8884d8"
-                tickFormatter={formatDate}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        )}
-        
-        {viewMode === 'comparison' && (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={filteredData}
-              margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="date" 
-                tickFormatter={formatDate}
-                angle={-45}
-                textAnchor="end"
-                height={50}
-              />
-              <YAxis 
-                domain={getYAxisDomain()}
-                label={{ value: 'Rate (%)', angle: -90, position: 'insideLeft' }}
-              />
-              <Tooltip 
-                labelFormatter={formatDate}
-                formatter={(value, name) => [`${value.toFixed(1)}%`, name]}
-              />
-              <Legend />
-              
-              {demographicGroups.map(group => (
-                filteredData.some(item => item[group.id] !== undefined) && (
-                  <Line 
-                    key={group.id}
-                    type="monotone" 
-                    dataKey={group.id} 
-                    stroke={group.color}
-                    name={group.name}
-                    dot={false}
-                  />
-                )
-              ))}
-              
-              <Brush 
-                dataKey="date" 
-                height={30} 
-                stroke="#8884d8"
-                tickFormatter={formatDate}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-        
-        {viewMode === 'demographics' && (
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart
-              layout="vertical"
-              data={getLatestDemographicData()}
-              margin={{ top: 20, right: 20, bottom: 20, left: 80 }}
-            >
-              <CartesianGrid stroke="#f5f5f5" />
-              <XAxis type="number" domain={[0, 'auto']} />
-              <YAxis dataKey="name" type="category" scale="band" width={80} />
-              <Tooltip formatter={(value) => [`${value.toFixed(1)}%`, 'Unemployment Rate']} />
-              <Legend />
-              <Bar dataKey="value" barSize={30} name="Unemployment Rate (%)">
-                {getLatestDemographicData().map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </ComposedChart>
-          </ResponsiveContainer>
-        )}
+      {/* Chart */}
+      <div className="h-96 w-full border border-gray-200 rounded">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={filteredData}
+            margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis 
+              dataKey="observation_date" 
+              tickFormatter={formatDate}
+              angle={-45}
+              textAnchor="end"
+              height={50}
+              interval="preserveStartEnd"
+            />
+            <YAxis 
+              domain={getYAxisDomain()}
+              label={{ value: 'Rate (%)', angle: -90, position: 'insideLeft' }}
+            />
+            <Tooltip 
+              labelFormatter={formatDate}
+              formatter={(value) => [`${Number(value).toFixed(1)}%`, 'Unemployment Rate']}
+            />
+            <Legend />
+            <Area 
+              type="monotone" 
+              dataKey="UNRATE" 
+              stroke="#2563eb"
+              fill="#dbeafe" 
+              name="Unemployment Rate (%)"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
       
       <div className="mt-6 p-4 bg-gray-100 rounded-lg">
         <h3 className="font-semibold mb-2">Key Insights:</h3>
         <ul className="list-disc pl-5 space-y-2">
-          <li>Unemployment rises sharply during recessions and falls gradually during recoveries.</li>
+          <li>The US unemployment rate ranged from 3.8% to 6.6% between 1994 and 2007.</li>
+          <li>The unemployment rate peaked in 1994 and reached its lowest point in 2000.</li>
+          <li>The data shows clear economic cycles with periods of rising and falling unemployment.</li>
           <li>The natural rate of unemployment (full employment) is generally considered to be around 4-5%.</li>
-          <li>Certain demographic groups typically experience higher unemployment rates than others.</li>
           <li>The unemployment rate is a lagging economic indicator, meaning it changes after the economy has begun to follow a particular trend.</li>
-          <li>Changes in unemployment rate should be considered alongside labor force participation rate for a complete picture.</li>
         </ul>
       </div>
     </div>
   );
 };
 
-export default UnemploymentAnalysis;
+export default UnemploymentChartWithCSVData;

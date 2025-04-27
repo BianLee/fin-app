@@ -4,13 +4,15 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import BeerDistributionGame from './BeerDistributionGame';
 import TariffSimulator from './TariffSimulator';
 import TariffGame from './TariffGame';
+import UnemploymentAnalysis from './UnemploymentAnalysis';
+import IndustrialProductionChart from "./IndustrialProductionChart"
 
 const Home = () => {
   // Navigation state management
-  const [mainCategory, setMainCategory] = useState('finance'); // 'finance' or 'games'
+  const [mainCategory, setMainCategory] = useState('finance'); // 'finance', 'games', or 'analysis'
   const [financeTab, setFinanceTab] = useState('bonds');
   const [gameTab, setGameTab] = useState('beer');
-  const [analysisTab, setAnalysisTab] = useState("fedfund");
+  const [analysisTab, setAnalysisTab] = useState("unemployment");
   
   // ----- DATA DEFINITIONS -----
   // Initial bond data
@@ -185,16 +187,16 @@ const Home = () => {
   const renderAnalysisTabs = () => (
     <div className="flex justify-center gap-4 mb-6 flex-wrap">
       <button 
-        className={`px-4 py-2 rounded-t border-b-2 transition ${analysisTab === 'fedfund' ? 'border-blue-600 text-blue-600' : 'border-transparent hover:text-blue-500'}`}
-        onClick={() => setAnalysisTab('fedfund')}
-      >
-        FEDFUND
-      </button>
-      <button 
-        className={`px-4 py-2 rounded-t border-b-2 transition ${gameTab === 'unemployment' ? 'border-blue-600 text-blue-600' : 'border-transparent hover:text-blue-500'}`}
+        className={`px-4 py-2 rounded-t border-b-2 transition ${analysisTab === 'unemployment' ? 'border-blue-600 text-blue-600' : 'border-transparent hover:text-blue-500'}`}
         onClick={() => setAnalysisTab('unemployment')}
       >
-        UNEMPLOYMENT
+        Unemployment
+      </button>
+      <button 
+        className={`px-4 py-2 rounded-t border-b-2 transition ${analysisTab === 'industrial-production' ? 'border-blue-600 text-blue-600' : 'border-transparent hover:text-blue-500'}`}
+        onClick={() => setAnalysisTab('industrial-production')}
+      >
+        Industrial Production
       </button>
     </div>
   );
@@ -475,11 +477,12 @@ const Home = () => {
           </>
         )}
 
+        {/* Data Analysis Section */}
         {mainCategory === 'analysis' && (
           <>
             {renderAnalysisTabs()}
-            {analysisTab === 'fedfund'}
-            {analysisTab === 'unemployment'}
+            {analysisTab === 'unemployment' && <UnemploymentAnalysis />}
+            {analysisTab === 'industrial-production' && <IndustrialProductionChart />}
           </>
         )}
       </div>
